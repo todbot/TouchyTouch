@@ -1,4 +1,3 @@
-
 #include "TouchyTouch.h"
 
 const int touch_pins[] = {4, 5, 6, };
@@ -8,11 +7,10 @@ TouchyTouch touches[touch_count];
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("TouchyTouch simpletest");
+  Serial.println("TouchyTouch simple_debounce");
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  // Touch buttons
   for (int i = 0; i < touch_count; i++) {
     touches[i].begin( touch_pins[i] );
   }
@@ -23,13 +21,17 @@ void loop() {
   for ( int i = 0; i < touch_count; i++) {
     touches[i].update();
 
-    if ( touches[i].isTouched() ) {
-      Serial.print("Pin touched ");
-      Serial.println(i);
+    if ( touches[i].rose() ) {
+      Serial.print("Pin pressed ");
+      Serial.println( touches[i].pin );
       digitalWrite(LED_BUILTIN, HIGH);
     }
-  }
 
-  delay(10);
-  digitalWrite(LED_BUILTIN, LOW);
+    if ( touches[i].fell() ) {
+      Serial.print("Pin release ");
+      Serial.println( touches[i].pin );
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+
+  }
 }
