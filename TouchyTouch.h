@@ -1,6 +1,6 @@
 /**
  * TouchyTouch - Simple capacitive sense touch library that mimics how CircuitPython touchio works
- *               But also with debounced rose() / fell() events
+ *               But also with debounced pressed() / released() events
  *
  * 7 Mar 2023 - @todbot / Tod Kurt
  *
@@ -12,19 +12,21 @@
 #define N_SAMPLES 10         // default is 10 in touchio, 15-20 works better on picotouch?
 #define CHARGE_MICROS 10     // default is 10 in touchio
 #define TIMEOUT_TICKS 10000
-#if defined(ARDUINO_ARCH_RP2040)
-#define OUTPUT_STYLE OUTPUT_12MA  // RP2040 matches 12mA outputs (max current) of CircuitPython
-#else
+//#if defined(ARDUINO_ARCH_RP2040)
+//#define OUTPUT_STYLE OUTPUT_12MA  // RP2040 can select a higher drive, default is OUTPUT_4MA
+//#else
 #define OUTPUT_STYLE OUTPUT  // for all Arduino
-#endif
+//#endif
 
 class TouchyTouch
 {
  public:
   TouchyTouch() {}
 
-  // set up a particular touch pin, automatically sets threshold and debounce_interval
-  // but those can be changed later for tuning
+  /*!
+    @brief Set up a particular touch pin, automatically sets threshold and debounce_interval
+     but those can be changed later for tuning
+  */
   void begin(int apin = -1, uint16_t debounce_millis=10) {
     pin = apin;
     recalibrate();
@@ -33,16 +35,21 @@ class TouchyTouch
     changed = false;
   }
 
+  /*!
+     @brief Recalibrate threshold value, called automatically on begin().
+  */
   void recalibrate() {
     const int num_reads = 5;
     for(int i=0; i<num_reads; i++) {
       raw_value += rawRead();
     }
     raw_value /= num_reads;
-    threshold = (raw_value * 1.05);
+    threshold = (raw_value * 1.05) + 100;
   }
 
-  // call update() as fast as possible
+  /*!
+     @brief Call update() as fast as possible. After, pressed()/released() are valid.
+  */
   void update() {
     changed = false;
     uint32_t now = millis();
@@ -54,23 +61,32 @@ class TouchyTouch
     }
   }
 
-  // signal changed to true since last update
-  bool rose() {
+  /*!
+     @brief Returns true if pin signal transitions to touched.
+  */
+  bool pressed() {
     return changed && last_state==true;
   }
 
-  // signal changed to false since last update
-  bool fell() {
+  /*!
+     @brief Returns true if pin signal transitions to released.
+  */
+  bool released() {
     return changed && last_state==false;
   }
 
-  // cause a read to happen, return true if above threshold
+  /*!
+     @brief Returns true if the button is currently physically pressed.
+     Will cause a read to happen
+  */
   bool isTouched() {
     raw_value = rawRead();
     return (raw_value > threshold);
   }
 
-  // do the actual touch detection
+  /*!
+     @brief Returns a raw_value 0-10000 value, does actual touch detection, called by isTouched().
+  */
   int16_t rawRead() {
     uint16_t ticks = 0;
     for (uint16_t i = 0; i < N_SAMPLES; i++) {
@@ -90,11 +106,11 @@ class TouchyTouch
     return ticks;
   }
 
-  uint32_t last_debounce_millis;
-  uint16_t debounce_interval;
-  bool last_state;
-  bool changed;
-  uint16_t threshold;
-  int pin;
-  uint16_t raw_value;
+  uint32_t last_debounce_millis;   ///< for debounce
+  uint16_t debounce_interval;   ///< for debounce
+  bool last_state;      ///< for debounce
+  bool changed;         ///< for debounce
+  uint16_t threshold;   ///< the threshold auto-calculated on begin()
+  uint16_t raw_value;   ///< raw touch value, compared against threshold
+  int pin;              ///< the pin this object is using
 };

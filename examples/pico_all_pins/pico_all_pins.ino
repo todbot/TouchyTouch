@@ -1,7 +1,7 @@
 
 #include "TouchyTouch.h"
 
-// all 29 GPIO of the Raspberry Pi Pico
+// all 29 GPIO of the Raspberry Pi Pico, even GPIO 25, aka LED_BUILTIN
 const int touch_pins[] = {0, 1, 2, 3, 4, 5, 6, 7, 8,
                           9, 10, 11, 12, 13, 14, 15,
                           16, 17, 18, 19, 20, 21, 22, 23,
@@ -17,10 +17,10 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  // Touch buttons
+  // configure touch buttons
   for (int i = 0; i < touch_count; i++) {
     touches[i].begin( touch_pins[i] );
-    touches[i].threshold += touch_threshold_adjust; // make a bit more noise-proof
+    touches[i].threshold += touch_threshold_adjust;  // make a bit more noise-proof
   }
 
 }

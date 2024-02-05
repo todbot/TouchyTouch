@@ -1,3 +1,13 @@
+/*
+  DESCRIPTION
+  ====================
+  Simple example of the TouchyTouch library showing the .pressed() and .released() methods.
+
+  Set touch_pins to the pins to act as touch sensors.
+  These pins must have a 1M pull-down resistor.
+
+*/
+
 #include "TouchyTouch.h"
 
 const int touch_pins[] = {4, 5, 6, };
@@ -21,13 +31,13 @@ void loop() {
   for ( int i = 0; i < touch_count; i++) {
     touches[i].update();
 
-    if ( touches[i].rose() ) {
+    if ( touches[i].pressed() ) {
       Serial.print("Pin pressed ");
       Serial.println( touches[i].pin );
       digitalWrite(LED_BUILTIN, HIGH);
     }
 
-    if ( touches[i].fell() ) {
+    if ( touches[i].released() ) {
       Serial.print("Pin release ");
       Serial.println( touches[i].pin );
       digitalWrite(LED_BUILTIN, LOW);
