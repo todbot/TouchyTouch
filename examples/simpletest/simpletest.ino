@@ -27,6 +27,6 @@ void loop() {
       Serial.print("Pin touched ");
       Serial.println(i);
     }
-
-    delay(10);
+  }
+  delay(10);
 }

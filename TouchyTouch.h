@@ -12,7 +12,11 @@
 #define N_SAMPLES 10         // default is 10 in touchio, 15-20 works better on picotouch?
 #define CHARGE_MICROS 10     // default is 10 in touchio
 #define TIMEOUT_TICKS 10000
-#define OUTPUT_STYLE OUTPUT_12MA  // matches 12mA outputs of CircuitPython
+#if defined(ARDUINO_ARCH_RP2040)
+#define OUTPUT_STYLE OUTPUT_12MA  // RP2040 matches 12mA outputs (max current) of CircuitPython
+#else
+#define OUTPUT_STYLE OUTPUT  // for all Arduino
+#endif
 
 class TouchyTouch
 {
@@ -35,7 +39,7 @@ class TouchyTouch
       raw_value += rawRead();
     }
     raw_value /= num_reads;
-    threshold = (raw_value * 1.05); 
+    threshold = (raw_value * 1.05);
   }
 
   // call update() as fast as possible
