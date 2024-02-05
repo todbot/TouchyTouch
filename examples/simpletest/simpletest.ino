@@ -23,7 +23,7 @@ void loop() {
   for ( int i = 0; i < touch_count; i++) {
     touches[i].update();
 
-    if ( touches[i].isTouched() ) {
+    if ( touches[i].touched() ) {
       Serial.print("Pin touched ");
       Serial.println(i);
       digitalWrite(LED_BUILTIN, HIGH);

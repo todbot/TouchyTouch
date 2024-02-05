@@ -28,7 +28,7 @@ void setup() {
 void loop() {
   for ( int i = 0; i < touch_count; i++) {
     touches[i].update();
-    char t = touches[i].isTouched() ? '|':' ';  // indicates a touched value
+    char t = touches[i].touched() ? '|':' ';  // indicates a touched value
     int touchval = touches[i].raw_value / 100;  // make a more printalbe value
     Serial.printf("%c%2d%c", t, touchval, t );
   }

@@ -48,40 +48,63 @@ class TouchyTouch
   }
 
   /*!
-     @brief Call update() as fast as possible. After, pressed()/released() are valid.
+     @brief Call update() as fast as possible. After, touched()/pressed()/released() are valid.
   */
   void update() {
     changed = false;
     uint32_t now = millis();
     if( now - last_debounce_millis > debounce_interval ) {
       last_debounce_millis = now;
-      bool touch_state = isTouched();
+      bool touch_state = readTouch();
       changed = touch_state != last_state;
       last_state = touch_state;
     }
   }
 
   /*!
-     @brief Returns true if pin signal transitions to touched.
+     @brief Returns true if pin signal transitions to touched on last update()
   */
   bool pressed() {
     return changed && last_state==true;
   }
 
   /*!
-     @brief Returns true if pin signal transitions to released.
+     @brief Returns true if pin signal transitions to released on last update().
   */
   bool released() {
     return changed && last_state==false;
   }
 
   /*!
+     @brief Returns true if pin signal transitions to touched. same as pressed()
+     @note  This function is deprecated, here only for old projects
+  */
+  bool rose() {
+    return changed && last_state==true;
+  }
+
+  /*!
+     @brief Returns true if pin signal transitions to released. same as released()
+     @note  This function is deprecated, here only for old projects
+  */
+  bool fell() {
+    return changed && last_state==true;
+  }
+
+  /*!
+     @brief Returns true if the button is currently physically pressed.
+  */
+  inline bool touched() {
+    return (raw_value > threshold);
+  }
+
+  /*!
      @brief Returns true if the button is currently physically pressed.
      Will cause a read to happen
   */
-  bool isTouched() {
+  bool readTouch() {
     raw_value = rawRead();
-    return (raw_value > threshold);
+    return touched();
   }
 
   /*!
