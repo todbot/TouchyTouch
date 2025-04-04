@@ -12,11 +12,14 @@
 #define N_SAMPLES 10         // default is 10 in touchio, 15-20 works better on picotouch?
 #define CHARGE_MICROS 10     // default is 10 in touchio
 #define TIMEOUT_TICKS 10000
+#define RECALIBRATE_READS 5
+#define THRESHOLD_ADJ_RATIO (1.1)
 //#if defined(ARDUINO_ARCH_RP2040)
 //#define OUTPUT_STYLE OUTPUT_12MA  // RP2040 can select a higher drive, default is OUTPUT_4MA
 //#else
 #define OUTPUT_STYLE OUTPUT  // for all Arduino
 //#endif
+
 
 class TouchyTouch
 {
@@ -25,32 +28,45 @@ class TouchyTouch
 
   /*!
     @brief Set up a particular touch pin, automatically sets threshold and debounce_interval
-     but those can be changed later for tuning
+     but those can be changed later for tuning.
+     For most platforms, use a 1M pull-down resistor and leave "pull_down" set to "true". 
+     For RP2350, pass "false" for "pull_down" and use an external 1M pull-up resistor.
+
+    @param apin Pin to use as touch input, must have external pull-down or pull-up resistor
+    @param debounce_millis Number of milliseconds to debounce the input, defaults to 10
+    @param pull_down What kind of external pull resistor to use, True = pull-down, False = pull-up.
   */
-  void begin(int apin = -1, uint16_t debounce_millis=10) {
+  void begin(int apin = -1, uint16_t debounce_millis=10, bool pull_down=true) {
     pin = apin;
     recalibrate();
     debounce_interval = debounce_millis;
     last_state = false;
     changed = false;
+    pull_down = pull_down;
   }
+ 
+  void begin(int apin = -1, bool pull_down=true) {
+    begin(apin, 10, pull_down);
+  }
+  
 
   /*!
      @brief Recalibrate threshold value, called automatically on begin().
   */
   void recalibrate() {
-    const int num_reads = 5;
+    const int num_reads = RECALIBRATE_READS;
+    raw_value = 0;
     for(int i=0; i<num_reads; i++) {
       raw_value += rawRead();
     }
     raw_value /= num_reads;
-    threshold = (raw_value * 1.05) + 100;
+    threshold = (raw_value * THRESHOLD_ADJ_RATIO);
   }
 
   /*!
      @brief Call update() as fast as possible. After, touched()/pressed()/released() are valid.
   */
-  void update() {
+   void update() {
     changed = false;
     uint32_t now = millis();
     if( now - last_debounce_millis > debounce_interval ) {
@@ -107,6 +123,7 @@ class TouchyTouch
     return touched();
   }
 
+  
   /*!
      @brief Returns a raw_value 0-10000 value, does actual touch detection, called by isTouched().
   */
@@ -115,11 +132,11 @@ class TouchyTouch
     for (uint16_t i = 0; i < N_SAMPLES; i++) {
       // set pad to digital output high for 10us to charge it
       pinMode(pin, OUTPUT_STYLE);
-      digitalWrite(pin, HIGH);
+      digitalWrite(pin, pull_down); // HIGH for pulldown, LOW for pullup
       delayMicroseconds(CHARGE_MICROS);
       // set pad back to an input and take some samples
       pinMode(pin, INPUT);
-      while ( digitalRead(pin) ) {
+      while ( digitalRead(pin) == pull_down) {
         if (ticks >= TIMEOUT_TICKS) {
           return TIMEOUT_TICKS;
         }
@@ -133,6 +150,7 @@ class TouchyTouch
   uint16_t debounce_interval;   ///< for debounce
   bool last_state;      ///< for debounce
   bool changed;         ///< for debounce
+  bool pull_down;        ///< pullDown if 1M pull-down, false if pull-up
   uint16_t threshold;   ///< the threshold auto-calculated on begin()
   uint16_t raw_value;   ///< raw touch value, compared against threshold
   int pin;              ///< the pin this object is using
