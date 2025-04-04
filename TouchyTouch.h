@@ -150,7 +150,7 @@ class TouchyTouch
   uint16_t debounce_interval;   ///< for debounce
   bool last_state;      ///< for debounce
   bool changed;         ///< for debounce
-  bool pull_down;        ///< pullDown if 1M pull-down, false if pull-up
+  bool pull_down;       ///< true if 1M pull-down, false if pull-up
   uint16_t threshold;   ///< the threshold auto-calculated on begin()
   uint16_t raw_value;   ///< raw touch value, compared against threshold
   int pin;              ///< the pin this object is using
