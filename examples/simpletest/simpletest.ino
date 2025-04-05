@@ -16,8 +16,8 @@ void setup() {
   for (int i = 0; i < touch_count; i++) {
     touches[i].begin( touch_pins[i] );
     // for external pullups (like for RP2350) instead of pulldowns,
-    //  pass in "false" for "pull_down"
-    // touches[i].begin( touch_pins[i], false ); 
+    //  pass in "true" for "pulldir"
+    // touches[i].begin( touch_pins[i], 10, true ); 
   }
 
 }

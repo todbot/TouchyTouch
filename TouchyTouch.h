@@ -29,27 +29,22 @@ class TouchyTouch
   /*!
     @brief Set up a particular touch pin, automatically sets threshold and debounce_interval
      but those can be changed later for tuning.
-     For most platforms, use a 1M pull-down resistor and leave "pull_down" set to "true". 
-     For RP2350, pass "false" for "pull_down" and use an external 1M pull-up resistor.
+     For most platforms, add an external 1M pull-down resistor and leave "pull_dir" set to "false". 
+     For RP2350, pass "true" for "pull_dir" and add an external 1M pull-up resistor.
 
-    @param apin Pin to use as touch input, must have external pull-down or pull-up resistor
+    @param apin Pin to use as touch input, must have external pull-down (or pull-up) resistor
     @param debounce_millis Number of milliseconds to debounce the input, defaults to 10
-    @param pull_down What kind of external pull resistor to use, True = pull-down, False = pull-up.
+    @param pull_dir What kind of external pull resistor used: false = pull-down, true = pull-up
   */
-  void begin(int apin = -1, uint16_t debounce_millis=10, bool pull_down=true) {
+  void begin(int apin = -1, uint16_t debounce_millis=10, bool apull_dir=false) {
     pin = apin;
-    recalibrate();
     debounce_interval = debounce_millis;
     last_state = false;
     changed = false;
-    pull_down = pull_down;
+    pull_dir = apull_dir;
+    recalibrate();
   }
  
-  void begin(int apin = -1, bool pull_down=true) {
-    begin(apin, 10, pull_down);
-  }
-  
-
   /*!
      @brief Recalibrate threshold value, called automatically on begin().
   */
@@ -130,19 +125,17 @@ class TouchyTouch
   int16_t rawRead() {
     uint16_t ticks = 0;
     for (uint16_t i = 0; i < N_SAMPLES; i++) {
-      // set pad to digital output high for 10us to charge it
-      pinMode(pin, OUTPUT_STYLE);
-      digitalWrite(pin, pull_down); // HIGH for pulldown, LOW for pullup
+      pinMode(pin, OUTPUT_STYLE);   // set pad to digital output high for 10us to charge it
+      digitalWrite(pin, !pull_dir);      // HIGH for pulldown, LOW for pullup
       delayMicroseconds(CHARGE_MICROS);
-      // set pad back to an input and take some samples
-      pinMode(pin, INPUT);
-      while ( digitalRead(pin) == pull_down) {
+      pinMode(pin, INPUT);          // set pad back to an input and take some samples
+      while (digitalRead(pin) != pull_dir) {
         if (ticks >= TIMEOUT_TICKS) {
           return TIMEOUT_TICKS;
         }
         ticks++;
       }
-    }
+    } 
     return ticks;
   }
 
@@ -150,7 +143,7 @@ class TouchyTouch
   uint16_t debounce_interval;   ///< for debounce
   bool last_state;      ///< for debounce
   bool changed;         ///< for debounce
-  bool pull_down;       ///< true if 1M pull-down, false if pull-up
+  bool pull_dir;        ///< false for 1M ext pull-down, true for 1M ext pull-up
   uint16_t threshold;   ///< the threshold auto-calculated on begin()
   uint16_t raw_value;   ///< raw touch value, compared against threshold
   int pin;              ///< the pin this object is using
